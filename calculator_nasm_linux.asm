@@ -47,14 +47,6 @@ mov eax, 1          ; Номер системного вызова: sys_exit
 xor ebx, ebx        ; Код возврата: 0
 int 0x80            ; Вызов ядра
 
-output:
-    ; Готовим к выводу через stdout
-    mov eax, 4 ; Номер системного вызова: sys_write
-    mov ebx, 1 ; Дескриптор файла: 1 (stdout)
-    call enter_first ; вызов запроса ввода данных
-    call enter_second ; вызов запроса ввода данных
-    ret
-
 greetings:
     ; Пишем строку в stdout
     call output
@@ -71,13 +63,7 @@ calc_first:
     mov edx, prompt1_len ; сохраняем в регистре ДЛИНУ сообщения для вывода в терминал
     int 0x80 ; вызов ядра
 
-    ; считать строку из stdin
-    mov eax, 3 ; запрос sys_read
-    mov ebx, 0 ; stdin
-    mov ecx, input ; буфер
-    mov edx, 7 ; максимальная длина
-    int 0x80 ; вызов ядра
-    mov [len], eax ; выгрузить из регистра длину ввода
+    call read_from_stdin
     call first_ascii_to_number
     ret
 
@@ -89,6 +75,11 @@ calc_second:
     mov edx, prompt2_len ; сохраняем в регистре ДЛИНУ сообщения для вывода в терминал
     int 0x80 ; вызов ядра
 
+    call read_from_stdin
+    call second_ascii_to_number
+    ret
+
+read_from_stdin:
     ; считать строку из stdin
     mov eax, 3 ; запрос sys_read
     mov ebx, 0 ; stdin
@@ -96,7 +87,6 @@ calc_second:
     mov edx, 7 ; максимальная длина
     int 0x80 ; вызов ядра
     mov [len], eax ; выгрузить из регистра длину ввода
-    call second_ascii_to_number
     ret
 
 multiplication:
