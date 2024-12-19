@@ -4,7 +4,7 @@ section .bss
     result resb 8 ; Результат число длиной 6 символов
 
 section .data           ; Секция данных
-    hello db "Let's summarize numbers:", 0xA   ; Строка с символом новой строки
+    hello db "This is a basic calculator. It can '+', '-', '*' and '/' numbers:", 0xA   ; Строка с символом новой строки
     hello_len equ $ - hello        ; Вычисляем длину строки
 
     prompt1 db "Enter first number: ", 0 ; Сообщение о первом числе
@@ -17,9 +17,31 @@ section .text           ; Секция кода
     global _start       ; Точка входа в программу
 
 _start:                 ; Начало программы
-call greetings
-call sum
-call finish
+
+; Приветствие с пользователем
+mov eax, 4 ; Номер системного вызова: sys_write
+mov ebx, 1 ; Дескриптор файла: 1 (stdout)
+mov ecx, hello ;
+mov edx. hello_len
+int 0x80
+
+; Запрос двух чисел
+call enter_first
+call enter_second
+; Переделать по следующему алгоритму
+; 1. Ввод первого числа
+; 2. Перевод первого числа из ASCI в числовой формат
+; 3. Ввод второго числа
+; 4. Перевод второго числа из ASCI в числовой формат
+; 5. Ввод действия над ними
+; 6. В зависимости от действия над ними выполнять операции
+; 7. Результат операции перевести из числового формата в ASCI
+; 8. Вывод результата
+
+; Завершаем программу
+mov eax, 1          ; Номер системного вызова: sys_exit
+xor ebx, ebx        ; Код возврата: 0
+int 0x80            ; Вызов ядра
 
 output:
     ; Готовим к выводу через stdout
