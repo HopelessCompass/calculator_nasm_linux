@@ -1,7 +1,11 @@
 section .bss
-    first resb 7 ; Первое число длиной 5 символов
-    second resb 7 ; Второе число длиной 5 символов
-    result resb 8 ; Результат число длиной 6 символов
+    first db 7 ; Первое число длиной 5 символов в формате строки
+    second db 7 ; Второе число длиной 5 символов в формате строки
+    len db 0 ; Длина введенной строки для преобразования строки в число
+
+    converted dd 0 ; Результат вычислений УЖЕ в формате числа
+
+    result dd 0 ;
 
 section .data           ; Секция данных
     hello db "This is a basic calculator. It can '+', '-', '*' and '/' numbers:", 0xA   ; Строка с символом новой строки
@@ -21,13 +25,13 @@ _start:                 ; Начало программы
 ; Приветствие с пользователем
 mov eax, 4 ; Номер системного вызова: sys_write
 mov ebx, 1 ; Дескриптор файла: 1 (stdout)
-mov ecx, hello ;
-mov edx, hello_len
-int 0x80
+mov ecx, hello ; Сохраняем в регистре сообщение для вывода в терминал
+mov edx, hello_len ; сохраняем в регистре ДЛИНУ сообщения для вывода в терминал
+int 0x80 ; вызов ядра
 
 ; Запрос двух чисел
-call enter_first
-call enter_second
+call calc_first
+call calc_second
 ; Переделать по следующему алгоритму
 ; 1. Ввод первого числа
 ; 2. Перевод первого числа из ASCI в числовой формат
@@ -59,73 +63,105 @@ greetings:
     int 0x80            ; Вызов ядра
     ret
 
-enter_first:
-    mov eax, 4 ; запрос sys_write
-    mov ebx, 1 ; stdout
-    mov ecx, prompt1 ; запись значения в регистр
-    mov edx, prompt1_len ; запись длины значения в регистр
+calc_first:
+    ; выводим сообщение с просьбой ввода первого числа из переменной
+    mov eax, 4 ; Номер системного вызова: sys_write
+    mov ebx, 1 ; Дескриптор файла: 1 (stdout)
+    mov ecx, prompt1 ; сохраняем в регистре сообщение для вывода в терминал
+    mov edx, prompt1_len ; сохраняем в регистре ДЛИНУ сообщения для вывода в терминал
     int 0x80 ; вызов ядра
+
+    ; считать строку из stdin
+    mov eax, 3 ; запрос sys_read
+    mov ebx, 0 ; stdin
+    mov ecx, input ; буфер
+    mov edx, 7 ; максимальная длина
+    int 0x80 ; вызов ядра
+    mov [len], eax ; выгрузить из регистра длину ввода
+    call first_ascii_to_number
     ret
 
-enter_second:
-    mov eax, 4 ; запрос sys_write
-    mov sbx, 1 ; stdout
-    mov ecx, prompt2 ; запись значения в регистр
-    mov edx, prompt2_len ; запись длины значения в регистр
-    int 0x80
+calc_second:
+    ; выводим сообщение с просьбой ввода первого числа из переменной
+    mov eax, 4 ; Номер системного вызова: sys_write
+    mov ebx, 1 ; Дескриптор файла: 1 (stdout)
+    mov ecx, prompt2 ; сохраняем в регистре сообщение для вывода в терминал
+    mov edx, prompt2_len ; сохраняем в регистре ДЛИНУ сообщения для вывода в терминал
+    int 0x80 ; вызов ядра
+
+    ; считать строку из stdin
+    mov eax, 3 ; запрос sys_read
+    mov ebx, 0 ; stdin
+    mov ecx, input ; буфер
+    mov edx, 7 ; максимальная длина
+    int 0x80 ; вызов ядра
+    mov [len], eax ; выгрузить из регистра длину ввода
+    call second_ascii_to_number
     ret
 
 multiplication:
     ; Умножение
-    mov eax, [first] ; Загружаем первое число в регистр EAX
-    mov ebx, [second] ; Загружаем второе числов в регистр EBX
-    mul ebx; Умножаем EAX на EBX с результатом в EAX
-    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    mov eax, [first]; Загружаем первое число в регистр EAX из регистра RDX
+    mul [second]; Умножаем EAX на EBX с результатом в EAX
+    mov [result], eax ; сохраняем в переменной результат чтобы использовать его для вывода
     ret
 
 addition:
     ; Сложение
-    mov eax, [first] ; Загружаем первое число в регистр EAX
-    mov ebx, [second] ; Загружаем второе числов в регистр EBX
-    add ebx; Складываем EAX с EBX с результатом в EAX
-    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    mov eax, [first]; Загружаем первое число в регистр EAX из регистра RDX
+    add [second]; Умножаем EAX на EBX с результатом в EAX
+    mov [result], eax ; сохраняем в переменной результат чтобы использовать его для вывода
     ret
 
 subtraction:
     ; Вычитание
-    mov eax, [first] ; Загружаем первое число в регистр EAX
-    mov ebx, [second] ; Загружаем второе числов в регистр EBX
-    sub ebx; Что из чего вычитаем, проверить!
-    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    mov eax, [first]; Загружаем первое число в регистр EAX из регистра RDX
+    sub [second]; Умножаем EAX на EBX с результатом в EAX
+    mov [result], eax ; сохраняем в переменной результат чтобы использовать его для вывода
     ret
 
 division:
     ; Деление
-    mov eax, [first] ; Загружаем первое число в регистр EAX
-    mov ebx, [second] ; Загружаем второе числов в регистр EBX
-    div ebx; Что на что делим, проверить!
-    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    mov eax, [first]; Загружаем первое число в регистр EAX из регистра RDX
+    div [second]; Умножаем EAX на EBX с результатом в EAX
+    mov [result], eax ; сохраняем в переменной результат чтобы использовать его для вывода
     ret
 
-; Проверить что на что делит и что из чего вычитает
-; Рефакторонуть код так чтобы была единая функция подготовки данных
-; и загрузка в регистры с сохранением EAX в EDX
-; А логику действия mul, add, sub, div в отдельные функции
-; Это нужно чтобы уменьшить количество кода и улучшить оптимизацию
+; Проверить:
+; division: что на что делит
+; substraction: что из чего вычитает
 
-finish:
-    ; Завершаем программу
-    mov eax, 1          ; Номер системного вызова: sys_exit
-    xor ebx, ebx        ; Код возврата: 0
-    int 0x80            ; Вызов ядра
-    ret
+first_ascii_to_number:
+    mov esi, first ; указатель на начало строки
+    xor eax, eax ; очищаем регистр EAX для числа
 
-asci_to_int:
-    xor eax,eax
-    ret
-; дописать конвертеры ASCI в числа и наоборот
+    call convert_loop
 
-converter:
-    mov edi, result
-    call int_to_asci
-    ret
+second_ascii_to_number:
+    mov esi, second ; указатель на начало строки
+    xor eax, eax ; очищаем регистр EAX для числа
+
+    call convert_loop
+
+; convert_loop и done_conversion - две части функции по переводу строки в число
+
+convert_loop:
+    movzx ebx, byte [esi] ; загрузить символ
+    cmp bl, 0x0A ; проверить на конец строки (\n)
+
+    je done_conversion ; если конец, то выйти из цикла
+
+    sub bl, '0' ; преобразовать символ в число
+    imul eax, eax, 10 ; умножить текущее число на 10
+    add eax, ebx ; добавить текущую цифру
+    inc esi ; перейти к следующему символу в строке
+
+    jmp convert_loop ; если не конец, то возобновить цикл, пройти по нему заново
+
+; done_conversion вызывается из convert_loop для выхода из лупа
+done_conversion:
+    mov [converted], eax ; сохранить результат
+
+; Сделать развилку по выбору действия над числами
+; Типа 1 - mul, 2 - add, 3 - sub, 4 - div
+; Вывести на экран результат, предварительно преобразовав число обратно в ASCII
