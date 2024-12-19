@@ -53,15 +53,43 @@ enter_second:
     int 0x80
     ret
 
-sum:
-    ; Суммируем
-    call output
-    mov al, [first] ; Загружаем первое число в регистр al
-    add al, [second] ; Прибавляем второе число
-    mov ecx, result
-    mov edx, result_len
-    int 0x80
+multiplication:
+    ; Умножение
+    mov eax, [first] ; Загружаем первое число в регистр EAX
+    mov ebx, [second] ; Загружаем второе числов в регистр EBX
+    mul ebx; Умножаем EAX на EBX с результатом в EAX
+    mov edx, eax ; Сохраняем результат (EAX) в EDX
     ret
+
+addition:
+    ; Сложение
+    mov eax, [first] ; Загружаем первое число в регистр EAX
+    mov ebx, [second] ; Загружаем второе числов в регистр EBX
+    add ebx; Складываем EAX с EBX с результатом в EAX
+    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    ret
+
+subtraction:
+    ; Вычитание
+    mov eax, [first] ; Загружаем первое число в регистр EAX
+    mov ebx, [second] ; Загружаем второе числов в регистр EBX
+    sub ebx; Что из чего вычитаем, проверить!
+    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    ret
+
+division:
+    ; Деление
+    mov eax, [first] ; Загружаем первое число в регистр EAX
+    mov ebx, [second] ; Загружаем второе числов в регистр EBX
+    div ebx; Что на что делим, проверить!
+    mov edx, eax ; Сохраняем результат (EAX) в EDX
+    ret
+
+; Проверить что на что делит и что из чего вычитает
+; Рефакторонуть код так чтобы была единая функция подготовки данных
+; и загрузка в регистры с сохранением EAX в EDX
+; А логику действия mul, add, sub, div в отдельные функции
+; Это нужно чтобы уменьшить количество кода и улучшить оптимизацию
 
 finish:
     ; Завершаем программу
@@ -73,6 +101,7 @@ finish:
 asci_to_int:
     xor eax,eax
     ret
+; дописать конвертеры ASCI в числа и наоборот
 
 converter:
     mov edi, result
