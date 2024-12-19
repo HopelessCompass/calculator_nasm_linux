@@ -22,7 +22,7 @@ _start:                 ; Начало программы
 mov eax, 4 ; Номер системного вызова: sys_write
 mov ebx, 1 ; Дескриптор файла: 1 (stdout)
 mov ecx, hello ;
-mov edx. hello_len
+mov edx, hello_len
 int 0x80
 
 ; Запрос двух чисел
